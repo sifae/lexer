@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string.h>
 #include "lex.hpp"
 
@@ -25,7 +24,7 @@ int isendlex(char chr)
 
 int isoperator(char chr)
 {
-  return strchr("+-*/%<>=:,", chr) != NULL;
+  return strchr("+-*/%<>=:,;()[]", chr) != NULL;
 }
 
 Lexem::Lexem(const char *str, LexType t, int line_)
@@ -93,7 +92,6 @@ void Scanner::run()
       analyze_S();
       break;
     case Err:
-      fprintf(stderr, "Unexpected '%c' at line %d\n", chr, line);
       break;
   }
 }
@@ -110,7 +108,7 @@ void Scanner::endLex(LexType type)
   state = H;
   *buf_top = '\0';
   lex = new Lexem(buf, type, line);
-	if(chr == '\n') 
+  if(chr == '\n')
     line++;
   memset(buf, '\0', MAX_BUFSIZE);
   buf_top = buf;
@@ -123,7 +121,7 @@ LexType Scanner::bufKeywordType()
     {"then",  4, Lthen},  {"sell",  4, Lsell},
     {"goto",  4, Lgoto},  {"prod",  4, Lprod},
     {"print", 5, Lprint}, {"build", 5, Lbuild},
-    {"while", 5, Lwhile}, {"turn",  4, Lturn},
+    {"while", 5, Lwhile}, {"endturn",  4, Lendturn},
     {"buy", 3, Lbuy} };
   for(LexTripl t : table){
     if(memcmp(t.str, buf, t.str_len) == 0)
@@ -162,6 +160,8 @@ void Scanner::analyze_H()
 {
   if(isendlex(chr)){
     lex = NULL;
+    if(chr == '\n') 
+      line++;
     return;
   } 
   if(isdigit(chr)){
@@ -184,7 +184,7 @@ void Scanner::analyze_H()
     setState(S);
     return;
   }
-  if(strchr("+-*/%<>=,", chr)){ 
+  if(isoperator(chr)){ //Double check ':' takes place
     saveChr();
     LexType type = bufOperatorType();
     if(type != Lerr){
@@ -214,7 +214,7 @@ void Scanner::analyze_I()
     endLex(Lid);
     return;
   }
-  if(isletter(chr) || isdigit(chr)){
+  if(isletter(chr) || isdigit(chr) || chr == '_'){
     setState(I);
     return;
   }
@@ -255,35 +255,4 @@ void Scanner::analyze_S()
     return;
 	}
   setState(S);
-}
-
-std::ostream &operator<<(std::ostream &os, Lexem &lex)
-{
-      os << "Lexem: " << lex.getStr()   << 
-            " Type: " << lex.getType()  << 
-            " Line: " << lex.getLine();
-      return os;
-}
-
-int main(int argc, char *argv[])
-{
-	Lexem *lex;
-	char c;
-	FILE *file;
-	Scanner scan;
-
-	file = fopen(argv[1], "r");
-  if(!file)
-    fprintf(stderr, "Cannot open file\n");
-	while((c = fgetc(file)) != EOF){
-    lex = scan.next(c);
-    if(lex){
-      if(isoperator(c)){
-        std::cout << *lex << '\n';
-        lex = scan.next(c);
-      }
-      std::cout << *lex << '\n'; 
-    }
-	}
-	return 0;
 }

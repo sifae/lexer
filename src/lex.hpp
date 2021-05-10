@@ -13,9 +13,11 @@ enum LexType
   Lnum, Lstring, Lid, Lassign,
 	Lif, Lthen, Lwhile, Ldo, Lgoto,
 	Lprint,
-	Lbuy, Lsell, Lprod, Lbuild, Lturn,
+	Lbuy, Lsell, Lprod, Lbuild, Lendturn,
   Lempty, Lerr //Lerr - no matching type was found 
 };
+
+int isoperator(char chr);
 
 class Lexem
 {
