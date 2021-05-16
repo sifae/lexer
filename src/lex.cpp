@@ -14,7 +14,8 @@ int isdigit(char chr)
 
 int isletter(char chr)
 {
-  return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
+  return  (chr >= 'a' && chr <= 'z') || 
+          (chr >= 'A' && chr <= 'Z');
 }
 
 int isendlex(char chr)
@@ -27,7 +28,7 @@ int isoperator(char chr)
   return strchr("+-*/%<>=:,;()[]", chr) != NULL;
 }
 
-Lexem::Lexem(const char *str, LexType t, int line_)
+Lexem::Lexem(LexType t, int line_, const char *str)
 {
 	str_lex = new char[strlen(str)+1];
 	strcpy(str_lex, str);
@@ -55,19 +56,76 @@ int Lexem::getLine()
 	return line;
 }
 
-void Scanner::saveChr()
+Scanner::Scanner()
 {
-  *buf_top = chr; 
-  buf_top++;
+	state = H;
+	line = 1;
+  buf_it = buf;
+  lexs = new LexLst;
+  lexs->lex = new Lexem;
+  lexs_it = lexs;
 }
 
-Lexem *Scanner::next(char chr_)
+Scanner::~Scanner()
+{
+  buf_it = NULL;
+  lexs_it = NULL;
+  while (lexs != NULL) {
+    delete lexs->lex;
+    delete lexs_it;
+    lexs_it = lexs;
+    lexs = lexs->next;
+  }
+}
+
+LexLst *Scanner::getLexs()
+{
+  return lexs;
+}
+
+Lexem *Scanner::getError()
+{
+  return lex;
+}
+
+void Scanner::saveChr()
+{
+  *buf_it = chr; 
+  buf_it++;
+}
+
+void Scanner::appendLex()
+{
+  *lexs_it->lex = *lex;
+  lexs_it->next = new LexLst;
+  lexs_it = lexs_it->next;
+  lexs_it->lex = new Lexem;
+}
+
+void Scanner::step()
+{
+  run();  
+  if(lex){
+    if(isoperator(chr) && !strchr(lex->getStr(), chr)){
+      appendLex();
+      run();
+    }
+    if(lex) //lex can be NULL if c is ':'
+      appendLex();
+  }
+}
+
+void Scanner::next(char chr_)
 { 
   //Ignore new data if error occured
-  if(state != Err)
+  if(state != Err){
     chr = chr_;
-  run();  
-  return lex;
+    step();
+    if(state == Err){ //To prevent multiple assignments
+      lexs = NULL;
+      lex = new Lexem(Lerr, line, buf); 
+    }
+  }
 }
 
 void Scanner::run()
@@ -106,12 +164,12 @@ void Scanner::setState(State state_)
 void Scanner::endLex(LexType type)
 {
   state = H;
-  *buf_top = '\0';
-  lex = new Lexem(buf, type, line);
+  *buf_it = '\0';
+  lex = new Lexem(type, line, buf);
   if(chr == '\n')
     line++;
   memset(buf, '\0', MAX_BUFSIZE);
-  buf_top = buf;
+  buf_it = buf;
 }
 
 LexType Scanner::bufKeywordType()
@@ -127,7 +185,7 @@ LexType Scanner::bufKeywordType()
     if(memcmp(t.str, buf, t.str_len) == 0)
       return t.type;
   }
-  return Lerr;
+  return Lnomatch;
 }
 
 LexType Scanner::bufOperatorType()
@@ -146,14 +204,7 @@ LexType Scanner::bufOperatorType()
     if(memcmp(t.str, buf, t.str_len) == 0)
       return t.type;
   }
-  return Lerr;
-}
-
-Scanner::Scanner()
-{
-	state = H;
-	line = 1;
-  buf_top = buf;
+  return Lnomatch;
 }
 
 void Scanner::analyze_H()
@@ -187,7 +238,7 @@ void Scanner::analyze_H()
   if(isoperator(chr)){ //Double check ':' takes place
     saveChr();
     LexType type = bufOperatorType();
-    if(type != Lerr){
+    if(type != Lnomatch){
       endLex(type);
       return;
     }
@@ -225,7 +276,7 @@ void Scanner::analyze_K()
 {
   if(isendlex(chr) || isoperator(chr)){
     LexType type = bufKeywordType();
-    if(type != Lerr){
+    if(type != Lnomatch){
       endLex(type);
       return;
     }
