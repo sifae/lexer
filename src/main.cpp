@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
-#include "lex.hpp"
+#include "lexer.hpp"
+#include "syntax.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -19,12 +20,15 @@ int main(int argc, char *argv[])
   lexs = scan.getLexs();
   if(!lexs){
     Lexem errLex = *scan.getError();
-    printf("Unexpected '%s' at line %d\n", 
+    printf("Lexical Error: Unexpected '%s' at line %d\n", 
         errLex.getStr(), errLex.getLine());
     return 1;
   }
-  for(auto it = lexs; it->next != NULL; it = it->next) 
-    printf("Lexem: %s Type: %d Line: %d\n", 
-        it->lex->getStr(), it->lex->getType(), it->lex->getLine());
+  Analyzer analyzer(lexs);
+  try{
+    analyzer.run();
+  } catch(SyntaxError &e){
+    printf("Syntax Error: %s\n", e.getMsg());
+  } 
 	return 0;
 }

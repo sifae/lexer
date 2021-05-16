@@ -1,5 +1,5 @@
-#ifndef LEX_HPP
-#define LEX_HPP
+#ifndef LEXER_HPP
+#define LEXER_HPP
 
 #define MAX_BUFSIZE 128
 
@@ -10,7 +10,8 @@ enum LexType
 	Land, Lor, Lnot,
 	Lsemi, Lcomm, 
   Llbrace, Lrbrace, Llsqbr, Lrsqbr,
-  Lnum, Lstring, Lid, Lassign,
+  Lnum, Lstring, Lassign,
+  Lvar, Llabel, Lfunc,
 	Lif, Lthen, Lwhile, Ldo, Lgoto,
 	Lprint,
 	Lbuy, Lsell, Lprod, Lbuild, Lendturn,
@@ -65,6 +66,7 @@ private:
 	void analyze_D();
   LexType bufKeywordType();
   LexType bufOperatorType();
+  LexType bufIdType();
 };
 
 #endif

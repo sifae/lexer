@@ -1,5 +1,5 @@
 #include <string.h>
-#include "lex.hpp"
+#include "lexer.hpp"
 
 struct LexTripl{
   const char *str;
@@ -25,7 +25,7 @@ int isendlex(char chr)
 
 int isoperator(char chr)
 {
-  return strchr("+-*/%<>=:,;()[]", chr) != NULL;
+  return strchr("+-*/%<>=:,;()[]&|", chr) != NULL;
 }
 
 Lexem::Lexem(LexType t, int line_, const char *str)
@@ -207,6 +207,17 @@ LexType Scanner::bufOperatorType()
   return Lnomatch;
 }
 
+LexType Scanner::bufIdType()
+{
+  if(memcmp(buf, "$", 1) == 0)
+    return Lvar;
+  if(memcmp(buf, "@", 1) == 0)
+    return Llabel;
+  if(memcmp(buf, "?", 1) == 0)
+    return Lfunc;
+  return Lnomatch;
+}
+
 void Scanner::analyze_H()
 {
   if(isendlex(chr)){
@@ -262,8 +273,11 @@ void Scanner::analyze_N()
 void Scanner::analyze_I()
 {
   if(isendlex(chr) || isoperator(chr)){
-    endLex(Lid);
-    return;
+    LexType type = bufIdType();
+    if(type != Lnomatch){
+      endLex(type);
+      return;
+    }
   }
   if(isletter(chr) || isdigit(chr) || chr == '_'){
     setState(I);
