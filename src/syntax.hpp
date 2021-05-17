@@ -32,13 +32,17 @@ private:
   void Buy();
   void Sell();
   void Operator();
-  void OperatorLogic();
-  void OperatorMath();
-  void OperatorComp();
+  //void OperatorLogic();
+  //void OperatorMath();
+  //void OperatorComp();
   void NumConst();
   void Function();
   void VarExpr();
   int currentType(LexType type);
+  int isOperator();
+  int isLegitFunc();
+  int isOneArgFunc();
+  int isNoArgFunc();
 };
 
 class SyntaxError

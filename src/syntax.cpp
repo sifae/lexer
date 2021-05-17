@@ -44,54 +44,65 @@ int Analyzer::currentType(LexType type)
   return lex->getType() == type;
 }
 
-//int Analyzer::isOperator()
-//{
-//  const int flag = 
-//    currentType(Lplus) || currentType(Lminus) ||
-//    currentType(Lmult) || currentType(Ldiv)   ||
-//    currentType(Lmod)  || currentType(Land)   ||
-//    currentType(Lor)   || currentType(Lnot);
-//  return flag;
-//}
+int Analyzer::isOperator()
+{
+  const int math = 
+    currentType(Lplus) || currentType(Lminus) ||
+    currentType(Lmult) || currentType(Ldiv)   ||
+    currentType(Lmod); 
+  const int logic = 
+    currentType(Land) || currentType(Lor) || currentType(Lnot);
+  const int comp = 
+    currentType(LT) || currentType(GT) || currentType(EQ);
+  return math || logic || comp;
+}
+
+int Analyzer::isLegitFunc()
+{
+  return isNoArgFunc() || isOneArgFunc(); 
+}
+
+int Analyzer::isNoArgFunc()
+{
+  const char table[8][32] = 
+  { {"?my_id"},{"?turn"},{"?players"},{"?active_players"},
+    {"?supply"},{"?raw_price"},{"?demand"},{"?production_price"}
+  };
+  for(auto fun : table){
+    if(strcmp(fun, lex->getStr()) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+int Analyzer::isOneArgFunc()
+{
+  const char table[10][32] = 
+  { {"?money"},{"?raw"},{"?production"},{"?factories"},
+    {"?auto_factories"},{"?manufactured"},{"?result_raw_sold"},
+    {"?result_raw_price"},{"?result_prod_bought"},
+    {"?result_prod_price"}
+  };
+  for(auto fun : table){
+    if(strcmp(fun, lex->getStr()) == 0)
+      return 1;
+  }
+  return 0;
+}
 
 void Analyzer::Statement()
 {
-  if(currentType(Lif)){
-    nextLex();
     If();
-  } else if(currentType(Lwhile)){
-    nextLex();
     While();
-  } else if(currentType(Lgoto)){
-    nextLex();
     Goto();
-  } else if(currentType(Lvar)){
-    nextLex();
     Assign();
-  } else if(currentType(Llabel)){
-    nextLex();
     Label();
-  } else if(currentType(Lprint)){
-    nextLex();
     Print();
-  } else if(currentType(Lendturn)){
-    nextLex();
     EndTurn();
-  } else if(currentType(Lprod)){
-    nextLex();
     Prod();
-  } else if(currentType(Lbuild)){
-    nextLex();
     Build();
-  } else if(currentType(Lbuy)){
-    nextLex();
     Buy();
-  } else if(currentType(Lsell)){
-    nextLex();
     Sell();
-  }
-  else 
-      throw SyntaxError("Something went wrong", lex);
 }
 
 void Analyzer::Expression()
@@ -104,47 +115,49 @@ void Analyzer::Expression()
 
 void Analyzer::Operator()
 {
-  OperatorLogic();
-  OperatorMath();
-  OperatorComp();
-}
-
-void Analyzer::OperatorLogic()
-{
-  if(currentType(Land)){
-    //TODO
-  } else if(currentType(Lor)){
-    //TODO
-  } else if(currentType(Lnot)){
-    //TODO
+  if(isOperator()){
+    nextLex();
+    Expression();
   }
 }
 
-void Analyzer::OperatorMath()
-{
-  if(currentType(Lplus)){
-    //TODO
-  } else if(currentType(Lminus)){
-    //TODO
-  } else if(currentType(Lmult)){
-    //TODO
-  } else if(currentType(Ldiv)){
-    //TODO
-  } else if(currentType(Lmod)){
-    //TODO
-  }
-}
-
-void Analyzer::OperatorComp()
-{
-  if(currentType(LT)){
-    //TODO
-  } else if(currentType(GT)){
-    //TODO
-  } else if(currentType(EQ)){
-    //TODO
-  }
-}
+//void Analyzer::OperatorLogic()
+//{
+//  if(currentType(Land)){
+//    nextLex();
+//    Expression();
+//  } else if(currentType(Lor)){
+//    //TODO
+//  } else if(currentType(Lnot)){
+//    //TODO
+//  }
+//}
+//
+//void Analyzer::OperatorMath()
+//{
+//  if(currentType(Lplus)){
+//    //TODO
+//  } else if(currentType(Lminus)){
+//    //TODO
+//  } else if(currentType(Lmult)){
+//    //TODO
+//  } else if(currentType(Ldiv)){
+//    //TODO
+//  } else if(currentType(Lmod)){
+//    //TODO
+//  }
+//}
+//
+//void Analyzer::OperatorComp()
+//{
+//  if(currentType(LT)){
+//    //TODO
+//  } else if(currentType(GT)){
+//    //TODO
+//  } else if(currentType(EQ)){
+//    //TODO
+//  }
+//}
 
 void Analyzer::NumConst()
 {
@@ -157,8 +170,14 @@ void Analyzer::NumConst()
 void Analyzer::Function()
 {
   if(currentType(Lfunc)){
-    //TODO Handle external functions
-    nextLex();
+    if(!isLegitFunc())
+      throw SyntaxError("Function '%s' is not defined", lex, lex->getStr());
+    else if(isNoArgFunc())
+      nextLex();
+    else if(isOneArgFunc()){
+      nextLex();
+      ExpressionParenth(lex->getStr());
+    }
     Expression();
   }
 }
@@ -185,33 +204,44 @@ void Analyzer::ExpressionParenth(const char *ExprName)
 
 void Analyzer::If()
 {
-  ExpressionParenth("if");
-  if(!currentType(Lthen))
-    throw SyntaxError("Expected 'then' after expression", lex); 
-  nextLex();
-  Statement();
+  if(currentType(Lif)){
+    nextLex();
+    ExpressionParenth("if");
+    if(!currentType(Lthen))
+      throw SyntaxError("Expected 'then' after expression", lex); 
+    nextLex();
+    Statement();
+  }
 }
 
 void Analyzer::While()
 {
-  ExpressionParenth("while");
-  Statement();
+  if(currentType(Lwhile)){
+    nextLex();
+    ExpressionParenth("while");
+    Statement();
+  }
 }
 
 void Analyzer::Label()
 {
-  nextLex();
-  Statement();
+  if(currentType(Llabel)){
+    nextLex();
+    Statement();
+  }
 }
 
 void Analyzer::Goto()
 {
-  if(!currentType(Llabel))
-    throw SyntaxError("Expected label after 'goto'", lex);
-  nextLex();
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after goto statement", lex);
-  nextLex();
+  if(currentType(Lgoto)){
+    nextLex();
+    if(!currentType(Llabel))
+      throw SyntaxError("Expected label after 'goto'", lex);
+    nextLex();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after goto statement", lex);
+    nextLex();
+  }
 }
 
 void Analyzer::Var()
@@ -227,22 +257,28 @@ void Analyzer::Var()
 
 void Analyzer::Assign()
 {
-  Var();
-  if(!currentType(Lassign))
-    throw SyntaxError("Expected ':=' after variable declaration", lex);
-  nextLex();
-  Expression();
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after assignment", lex);
-  nextLex();
+  if(currentType(Lvar)){
+    nextLex();
+    Var();
+    if(!currentType(Lassign))
+      throw SyntaxError("Expected ':=' after declaration", lex);
+    nextLex();
+    Expression();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after assignment", lex);
+    nextLex();
+  }
 }
 
 void Analyzer::Print()
 {
-  PrintList();
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after print statement", lex);
-  nextLex();
+  if(currentType(Lprint)){
+    nextLex();
+    PrintList();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after print statement", lex);
+    nextLex();
+  }
 }
 
 void Analyzer::PrintList()
@@ -265,45 +301,60 @@ void Analyzer::PrintElem()
 
 void Analyzer::EndTurn()
 {
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after 'endturn'", lex);
-  nextLex();
+  if(currentType(Lendturn)){
+    nextLex();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after 'endturn'", lex);
+    nextLex();
+  }
 }
 
 void Analyzer::Prod()
 {
-  Expression();
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after prod statement", lex);
-  nextLex();
+  if(currentType(Lprod)){
+    nextLex();
+    Expression();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after prod statement", lex);
+    nextLex();
+  }
 }
 
 void Analyzer::Build()
 {
-  Expression();
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after build statement", lex);
-  nextLex();
+  if(currentType(Lbuild)){
+    nextLex();
+    Expression();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after build statement", lex);
+    nextLex();
+  }
 }
 
 void Analyzer::Buy()
 {
-  Expression();
-  if(!currentType(Lcomm))
-    throw SyntaxError("Expected ',' after 1 argument in 'buy'", lex);
-  nextLex();
-  Expression();
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after buy statement", lex);
+  if(currentType(Lbuy)){
+    nextLex();
+    Expression();
+    if(!currentType(Lcomm))
+      throw SyntaxError("Expected ',' after 1 argument in 'buy'", lex);
+    nextLex();
+    Expression();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after buy statement", lex);
+  }
 }
 
 void Analyzer::Sell()
 {
-  Expression();
-  if(!currentType(Lcomm))
-    throw SyntaxError("Expected ',' after 1 argument in 'sell'", lex);
-  nextLex();
-  Expression();
-  if(!currentType(Lsemi))
-    throw SyntaxError("Expected ';' after sell statement", lex);
+  if(currentType(Lsell)){
+    nextLex();
+    Expression();
+    if(!currentType(Lcomm))
+      throw SyntaxError("Expected ',' after 1 argument in 'sell'", lex);
+    nextLex();
+    Expression();
+    if(!currentType(Lsemi))
+      throw SyntaxError("Expected ';' after sell statement", lex);
+  }
 }

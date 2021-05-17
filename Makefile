@@ -2,8 +2,8 @@ CC=g++
 SRCDIR=./src
 OBJDIR=./obj
 CFLAGS=-I$(SRCDIR) -Wall -g -o
-HEADERS=lexer.hpp
-SOURCES=lexer.cpp main.cpp
+HEADERS=lexer.hpp syntax.hpp
+SOURCES=lexer.cpp syntax.cpp main.cpp
 TARGET=lex
 OBJ:=$(SOURCES:.cpp=.o)
 OBJ:=$(addprefix $(OBJDIR)/,$(OBJ))
