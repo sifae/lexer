@@ -5,16 +5,23 @@
 
 int main(int argc, char *argv[])
 {
-	LexLst *lexs;
-	int c;
-	FILE *file;
-	Scanner scan;
+  LexLst *lexs;
+  int c;
+  FILE *file;
+  Scanner scan;
+  
+  if(argc < 2){
+    fprintf(stderr, "Filename required\n");
+    return 1;
+  }
 
-	file = fopen(argv[1], "r");
-  if(!file)
+  file = fopen(argv[1], "r");
+  if(!file){
     fprintf(stderr, "Cannot open file\n");
+    return 1;
+  }
 
-	while((c = fgetc(file)) != EOF)
+  while((c = fgetc(file)) != EOF)
     scan.next(c);
 
   lexs = scan.getLexs();
@@ -31,5 +38,5 @@ int main(int argc, char *argv[])
     printf("Syntax Error: %s\n", e.getMsg());
     return 1;
   } 
-	return 0;
+  return 0;
 }

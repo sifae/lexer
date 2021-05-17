@@ -11,7 +11,7 @@ SyntaxError::SyntaxError(const char *fmt, Lexem *lex, ...)
 
   va_start(args, lex);
   vsprintf(msg, fmt, args);
-  sprintf(tmp, " at line %d", lex->getLine());
+  sprintf(tmp, " at line %d", lex->getLine()-1);
   va_end(args);
 
   strcat(msg, tmp);
@@ -175,8 +175,12 @@ void Analyzer::Function()
   if(currentType(Lfunc)){
     if(!isLegitFunc())
       throw SyntaxError("Function '%s' is not defined", lex, lex->getStr());
-    else if(isNoArgFunc())
+    else if(isNoArgFunc()){
+      const char *name = lex->getStr();
       nextLex();
+      if(currentType(Llbrace))
+        throw SyntaxError("Function '%s' takes no arguments", lex, name);
+    }
     else if(isOneArgFunc()){
       nextLex();
       ExpressionParenth(lex->getStr());

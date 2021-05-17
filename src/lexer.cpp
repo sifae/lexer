@@ -58,8 +58,8 @@ int Lexem::getLine()
 
 Scanner::Scanner()
 {
-	state = H;
-	line = 1;
+  state = H;
+  line = 1;
   buf_it = buf;
   lexs = new LexLst;
   lexs->lex = new Lexem;
@@ -130,7 +130,7 @@ void Scanner::next(char chr_)
 
 void Scanner::run()
 {
-	switch(state){
+  switch(state){
     case H:
       analyze_H();
       break;
@@ -304,20 +304,20 @@ void Scanner::analyze_K()
 
 void Scanner::analyze_A()
 {
-	if(chr == '='){
+  if(chr == '='){
     saveChr();
     endLex(Lassign);
     return;
-	}
+  }
   state = Err;
 }
 
 void Scanner::analyze_S()
 {
-	if(chr == '"'){
+  if(chr == '"'){
     saveChr();
     endLex(Lstring);
     return;
-	}
+  }
   setState(S);
 }
