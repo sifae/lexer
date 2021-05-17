@@ -1,1 +1,10 @@
-if 1 then;
+@begin
+  print "Move number" ?turn;
+  buy 2, ?raw_price;
+  sell ?production(?my_id), ?production_price;
+  $toprod := 2;
+  if(?raw(?my_id) < $toprod) then
+    $toprod := ?raw(?my_id);
+  prod $toprod;
+  endturn;
+  goto @begin;

@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     analyzer.run();
   } catch(SyntaxError &e){
     printf("Syntax Error: %s\n", e.getMsg());
+    return 1;
   } 
 	return 0;
 }

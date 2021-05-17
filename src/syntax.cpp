@@ -92,17 +92,20 @@ int Analyzer::isOneArgFunc()
 
 void Analyzer::Statement()
 {
-    If();
-    While();
-    Goto();
-    Assign();
-    Label();
-    Print();
-    EndTurn();
-    Prod();
-    Build();
-    Buy();
-    Sell();
+  if(lexs->next == NULL)
+    return;
+  If();
+  While();
+  Goto();
+  Assign();
+  Label();
+  Print();
+  EndTurn();
+  Prod();
+  Build();
+  Buy();
+  Sell();
+  Statement();
 }
 
 void Analyzer::Expression()
@@ -195,10 +198,11 @@ void Analyzer::ExpressionParenth(const char *ExprName)
 {
   if(!currentType(Llbrace))
     throw SyntaxError("Expected '(' after '%s'", lex, ExprName); 
+  nextLex();
   Expression();
   if(!currentType(Lrbrace))
     throw SyntaxError("Expected ')' before '%s'",
-          lex, lexs->next->lex->getStr()); 
+          lex, lex->getStr()); 
   nextLex();
 }
 
@@ -261,7 +265,7 @@ void Analyzer::Assign()
     nextLex();
     Var();
     if(!currentType(Lassign))
-      throw SyntaxError("Expected ':=' after declaration", lex);
+      throw SyntaxError("Expected ':=' in declaration", lex);
     nextLex();
     Expression();
     if(!currentType(Lsemi))
@@ -342,6 +346,7 @@ void Analyzer::Buy()
     Expression();
     if(!currentType(Lsemi))
       throw SyntaxError("Expected ';' after buy statement", lex);
+    nextLex();
   }
 }
 
@@ -356,5 +361,6 @@ void Analyzer::Sell()
     Expression();
     if(!currentType(Lsemi))
       throw SyntaxError("Expected ';' after sell statement", lex);
+    nextLex();
   }
 }
