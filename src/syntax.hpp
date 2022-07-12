@@ -7,11 +7,11 @@
 
 class Analyzer
 {
-	Lexem *lex;
+  Lexem *lex;
   LexLst *lexs;
 public:
-	Analyzer(LexLst *lexs);
-	void run();
+  Analyzer(LexLst *lexs);
+  void run();
 private:
   void nextLex();
   void Expression();
