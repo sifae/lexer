@@ -9,13 +9,13 @@ enum LexType
 	EQ, LT , GT,
 	Land, Lor, Lnot,
 	Lsemi, Lcomm, 
-  Llbrace, Lrbrace, Llsqbr, Lrsqbr,
-  Lnum, Lstring, Lassign,
-  Lvar, Llabel, Lfunc,
+  	Llbrace, Lrbrace, Llsqbr, Lrsqbr,
+  	Lnum, Lstring, Lassign,
+  	Lvar, Llabel, Lfunc,
 	Lif, Lthen, Lwhile, Ldo, Lgoto,
 	Lprint,
 	Lbuy, Lsell, Lprod, Lbuild, Lendturn,
-  Lempty, Lnomatch, Lerr
+  	Lempty, Lnomatch, Lerr
 };
 
 class Lexem
@@ -38,16 +38,16 @@ struct LexLst{
 
 class Scanner
 {
-	enum State {H, N, I, K, A, S, Err} state;
+  enum State {H, N, I, K, A, S, Err} state;
   char    chr;
   int     line; //Line of code(by order) we parsing
-	char    buf[MAX_BUFSIZE], *buf_it;
-	Lexem   *lex; //Current lexeme, equals NULL if not finished yet
+  char    buf[MAX_BUFSIZE], *buf_it;
+  Lexem   *lex; //Current lexeme, equals NULL if not finished yet
   LexLst  *lexs, *lexs_it;
 public:
-	Scanner();
+  Scanner();
   ~Scanner();
-	void next(char chr);
+  void next(char chr);
   LexLst  *getLexs();   //Returns NULL if error occured
   Lexem   *getError();
 private:
@@ -57,13 +57,13 @@ private:
   void endLex(LexType type);
   void appendLex();
   void step();  //Construct list of lexems 
-	void analyze_H();
-	void analyze_N();
-	void analyze_I();
-	void analyze_K();
-	void analyze_A();
-	void analyze_S();
-	void analyze_D();
+  void analyze_H();
+  void analyze_N();
+  void analyze_I();
+  void analyze_K();
+  void analyze_A();
+  void analyze_S();
+  void analyze_D();
   LexType bufKeywordType();
   LexType bufOperatorType();
   LexType bufIdType();
